@@ -33,17 +33,17 @@ df = df.with_columns([
     pl.col("馬体重").map_elements(lambda x: split_weight(x)[1], return_dtype=pl.Int64).alias("体重増減")
 ])
 
-# 性齢を分割
-def split_seirei(s):
+# 馬齢を分割
+def split_umarei(s):
     if not isinstance(s, str) or s == "":
         return None, None
-    sex = s[0]
-    age = int(s[1:]) if s[1:].isdigit() else None
+    sex = s[0]                      # 牡 / 牝 / セ
+    age = int(s[1:]) if s[1:].isdigit() else None  # 数字部分
     return sex, age
 
 df = df.with_columns([
-    pl.col("性齢").map_elements(lambda x: split_seirei(x)[0], return_dtype=pl.Utf8).alias("性別"),
-    pl.col("性齢").map_elements(lambda x: split_seirei(x)[1], return_dtype=pl.Int64).alias("年齢")
+    pl.col("馬齢").map_elements(lambda x: split_umarei(x)[0], return_dtype=pl.Utf8).alias("性別"),
+    pl.col("馬齢").map_elements(lambda x: split_umarei(x)[1], return_dtype=pl.Int64).alias("年齢")
 ])
 
 # 数値キャスト
@@ -156,5 +156,6 @@ elif mode == "年ごとの平均馬体重・平均上がり3F":
     plt.title("毎日王冠 年ごとの平均馬体重・平均上がり3F（上位3頭）")
 
     st.pyplot(fig)
+
 
 
