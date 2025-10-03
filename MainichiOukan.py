@@ -17,8 +17,7 @@ st.set_page_config(page_title="毎日王冠分析（上位3頭限定・タイム
 csv_path = os.path.join(os.path.dirname(__file__), "mainichioukan2015-2024.csv")
 
 # pandasで読んでからpolarsへ変換（文字コードはExcel想定でcp932）
-df_pd = pd.read_csv(csv_path, encoding="cp932")
-df = pl.from_pandas(df_pd)
+df = pl.read_csv(csv_path)
 
 # 馬体重を分割
 def split_weight(w):
@@ -157,3 +156,4 @@ elif mode == "年ごとの平均馬体重・平均上がり3F":
     plt.title("毎日王冠 年ごとの平均馬体重・平均上がり3F（上位3頭）")
 
     st.pyplot(fig)
+
