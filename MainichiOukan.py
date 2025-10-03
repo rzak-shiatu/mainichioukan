@@ -1,39 +1,24 @@
 import os
+import pandas as pd
 import polars as pl
 import duckdb
 import re
 import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import pandas as pd
 from matplotlib import rcParams
 
 # フォント設定（日本語表示用）
-rcParams['font.family'] = 'Meiryo'  # Windowsならメイリオ
-# macOS: 'Hiragino Sans'
-# Linux: 'IPAexGothic' など
+rcParams['font.family'] = 'Meiryo'
 
-st.set_page_config(page_title="毎日王冠分析（上位3頭限定）", layout="wide")
+st.set_page_config(page_title="毎日王冠分析（上位3頭限定・タイム無し）", layout="wide")
 
 # === CSV読込 ===
 csv_path = os.path.join(os.path.dirname(__file__), "mainichioukan2015-2024.csv")
-df = pl.read_csv(csv_path)
 
-# タイムを秒数に変換
-def to_seconds(time_str):
-    if not isinstance(time_str, str) or time_str.strip() == "":
-        return None
-    if ":" in time_str:
-        m, s = time_str.split(":")
-        return int(m) * 60 + float(s)
-    try:
-        return float(time_str)
-    except ValueError:
-        return None
-
-df = df.with_columns(
-    pl.col("タイム").map_elements(to_seconds, return_dtype=pl.Float64).alias("タイム秒")
-)
+# pandasで読んでからpolarsへ変換（文字コードはExcel想定でcp932）
+df_pd = pd.read_csv(csv_path, encoding="cp932")
+df = pl.from_pandas(df_pd)
 
 # 馬体重を分割
 def split_weight(w):
@@ -70,7 +55,7 @@ df = df.with_columns([
     pl.col("着順").cast(pl.Int64, strict=False)
 ])
 
-# === ★ 上位3頭のみ抽出 ===
+# === 上位3頭のみ抽出 ===
 df_top3 = df.filter(pl.col("着順") <= 3)
 
 # DuckDBに登録
@@ -94,14 +79,14 @@ if mode == "人気別勝率":
         ORDER BY 人気
     """).df()
 
-    st.subheader("人気別勝率（過去10年・上位3頭対象）")
+    st.subheader("人気別勝率（上位3頭対象）")
     st.dataframe(q_pop_stats.set_index("人気"))
 
     fig, ax = plt.subplots(figsize=(10, 6))
     bars = ax.bar(q_pop_stats["人気"].astype(str), q_pop_stats["勝率"], color="orange")
     ax.set_xlabel("人気")
     ax.set_ylabel("勝率 (%)")
-    ax.set_title("毎日王冠 過去10年 人気別勝率（上位3頭）")
+    ax.set_title("毎日王冠 人気別勝率（上位3頭）")
     ax.grid(axis="y", linestyle="--", alpha=0.7)
 
     for bar, rate, wins in zip(bars, q_pop_stats["勝率"], q_pop_stats["勝利数"]):
@@ -125,14 +110,14 @@ elif mode == "枠順別勝率":
         ORDER BY 枠番
     """).df()
 
-    st.subheader("枠順別勝率（過去10年・上位3頭対象）")
+    st.subheader("枠順別勝率（上位3頭対象）")
     st.dataframe(q_waku.set_index("枠番"))
 
     fig, ax = plt.subplots(figsize=(8, 6))
     bars = ax.bar(q_waku["枠番"].astype(str), q_waku["勝率"], color="skyblue")
     ax.set_xlabel("枠番")
     ax.set_ylabel("勝率 (%)")
-    ax.set_title("毎日王冠 過去10年 枠順別勝率（上位3頭）")
+    ax.set_title("毎日王冠 枠順別勝率（上位3頭）")
     ax.grid(axis="y", linestyle="--", alpha=0.7)
 
     for bar, rate, wins in zip(bars, q_waku["勝率"], q_waku["勝利数"]):
@@ -169,6 +154,6 @@ elif mode == "年ごとの平均馬体重・平均上がり3F":
     ax2.set_ylabel("平均上がり3F (秒)")
 
     fig.legend(loc="upper left", bbox_to_anchor=(0.1, 1.0))
-    plt.title("毎日王冠 過去10年 平均馬体重・平均上がり3F（上位3頭）")
+    plt.title("毎日王冠 年ごとの平均馬体重・平均上がり3F（上位3頭）")
 
     st.pyplot(fig)
