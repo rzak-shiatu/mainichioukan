@@ -49,9 +49,9 @@ df = df.with_columns([
 # 数値キャスト
 df = df.with_columns([
     pl.col("人気").cast(pl.Int64, strict=False),
-    pl.col("単勝").cast(pl.Float64, strict=False),
-    pl.col("上がり3F").cast(pl.Float64, strict=False),
-    pl.col("着順").cast(pl.Int64, strict=False)
+    pl.col("上がり").cast(pl.Float64, strict=False),   # ← 上がり3F の代わり
+    pl.col("着順").cast(pl.Int64, strict=False),
+    pl.col("斤量").cast(pl.Int64, strict=False),       # 騎手の負担重量もキャスト可
 ])
 
 # === 上位3頭のみ抽出 ===
@@ -156,6 +156,7 @@ elif mode == "年ごとの平均馬体重・平均上がり3F":
     plt.title("毎日王冠 年ごとの平均馬体重・平均上がり3F（上位3頭）")
 
     st.pyplot(fig)
+
 
 
 
